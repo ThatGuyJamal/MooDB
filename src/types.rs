@@ -13,11 +13,17 @@ pub struct Record {
     value: String,
 }
 
+/// The storage type of the database.
+/// 
+/// This is an enum that contains the different storage types that the database can use.
+/// 
+/// The default storage type is `StorageType::Json`.
 pub enum StorageType {
     Memory,
     Json
 }
 
+/// The error types for the database.
 #[derive(Debug)]
 pub enum MooErrorCodes {
     Debug,
@@ -26,6 +32,7 @@ pub enum MooErrorCodes {
     Fatal
 }
 
+/// The error struct for the database.
 #[derive(Debug)]
 pub struct MooError {
     pub code: MooErrorCodes, 
