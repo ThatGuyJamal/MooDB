@@ -16,7 +16,7 @@ pub struct MooDB {
     // database file
     pub file: File,
     // database storage type
-    pub storage_option: Option<StorageType>,
+    pub storage_option: StorageType,
 }
 
 impl MooDB {
@@ -31,8 +31,8 @@ impl MooDB {
         };
 
         let storage_option = match custom_storage_option {
-            Some(option) => Some(option),
-            None => None,
+            Some(option) => option,
+            None => StorageType::Json,
         };
 
         let file = OpenOptions::new()
