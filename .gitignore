@@ -1,0 +1,5 @@
+/target
+/Cargo.lock
+
+# Dont add any files with .json as they are used for testing the db
+/*.json
