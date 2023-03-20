@@ -4,7 +4,7 @@ use serde_json::Value;
 /// Return Type for common db actions
 pub type MooResult<T> = Result<T, MooError>;
 
-pub type MooRecord = Vec<Record>;
+pub type MooRecords = Vec<Record>;
 
 /// A record in the database.
 ///
@@ -27,7 +27,7 @@ pub struct Record {
 ///
 /// The default storage type is `StorageType::Json`.
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub enum StorageType {
+pub enum StorageTypes {
     Memory,
     Json,
 }
@@ -35,6 +35,7 @@ pub enum StorageType {
 /// The error types for the database.
 #[derive(Debug)]
 pub enum MooErrorCodes {
+    NotFound,
     Debug,
     Warn,
     Error,
