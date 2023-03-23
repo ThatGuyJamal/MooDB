@@ -231,6 +231,9 @@ impl MooClient {
 
         let json = serde_json::to_string(&records).unwrap();
 
+        // deletes all the contents of the file
+        file.set_len(0).unwrap();
+
         // Write the new records to the database file
         return match file.write_all(json.as_bytes()) {
             Ok(_) => Ok(()),
