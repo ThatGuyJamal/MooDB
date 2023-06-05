@@ -49,3 +49,16 @@ moodb = { git = "https://github.com/ThatGuyJamal/MooDB" }
 ```
 
 Coming soon to `crates.io`
+
+## Todo 
+
+- `delete_many` method
+- `delete_all` method
+- `update_many` method
+- `get_many` method
+- `get_all` method
+- `insert_many` method
+
+- Improve thread safety
+- Implement debug logs config option
+- improve error messages and error handling
