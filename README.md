@@ -37,3 +37,15 @@ account.delete("John Doe").unwrap(); // deletes the data saved
 ```
 
 For more complex examples, see the [examples](./examples) directory.
+
+## Installation
+
+Add this to your `Cargo.toml`:
+
+```toml
+[dependencies]
+# ...
+moodb = { git = "https://github.com/ThatGuyJamal/MooDB" }
+```
+
+Coming soon to `crates.io`
