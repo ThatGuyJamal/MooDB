@@ -12,7 +12,7 @@ struct Bank {
     age: u8,
 }
 
-let mut db = MooClient::<String>::new("bank_accounts", None, None).unwrap();
+let mut db = MooClient::<Bank>::new("bank_accounts", None, None).unwrap();
 
 let account = db.get_table().unwrap();
 
