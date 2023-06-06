@@ -62,4 +62,3 @@ moodb = { git = "https://github.com/ThatGuyJamal/MooDB" }
 - Add memory old mode (for faster reads/write) but no file persistance.
 - Improve thread safety
 - improve error messages and error handling
-- Add to crates.io
