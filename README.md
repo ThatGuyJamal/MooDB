@@ -13,7 +13,7 @@ struct Bank {
 }
 
 fn main() {
-    let mut db = MooClient::<String>::new("bank_accounts", None, None).unwrap();
+    let mut db: MooClient<Bank> = MooClient::new("bank_accounts", None, None).unwrap();
 
     let accounts = db.get_table().unwrap();
 
