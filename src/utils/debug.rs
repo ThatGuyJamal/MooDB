@@ -27,17 +27,21 @@ pub enum DebugLevel {
 }
 
 impl DebugClient {
-    pub fn new(enabled: bool, level: DebugLevel, config: Configuration) -> Self {
+    pub fn new(enabled: bool, level: Option<DebugLevel>, config: Configuration) -> Self {
+        let d_level = match level {
+            Some(level) => level,
+            None => DebugLevel::Info,
+        };
         if !enabled {
             return Self {
                 enabled: false,
-                level: DebugLevel::Info,
+                level: d_level,
                 path: None,
                 file: None,
             };
         }
 
-        let db_dir_path = config.db_dir.expect("No db_dir");
+        let db_dir_path = config.db_dir;
         let file_path = PathBuf::from(format!("{}/debug.log", db_dir_path));
 
         println!("Debug file path: {:?}", file_path);
@@ -61,7 +65,7 @@ impl DebugClient {
                         println!("Failed creating debug file: {}", e);
                         return Self {
                             enabled: true,
-                            level: DebugLevel::Info,
+                            level: d_level,
                             path: None,
                             file: None,
                         };
@@ -72,7 +76,7 @@ impl DebugClient {
 
         Self {
             enabled: true,
-            level,
+            level: d_level,
             path: Some(file_path),
             file: Some(Arc::new(Mutex::new(file))),
         }
@@ -106,7 +110,7 @@ mod tests {
 
     #[test]
     fn test_debug() {
-        let mut debug = DebugClient::new(true, DebugLevel::Info, Configuration::default());
+        let mut debug = DebugClient::new(true, None, Configuration::default());
 
         for i in 0..100 {
             debug.log(format!("Debug index #{} out of #{}", i, 100));

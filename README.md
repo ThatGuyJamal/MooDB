@@ -13,7 +13,7 @@ struct Bank {
 }
 
 fn main() {
-    let mut db: MooClient<Bank> = MooClient::new("bank_accounts", None, None).unwrap();
+    let mut db = MooClient::<Bank>::new("bank_accounts", None, None).unwrap();
 
     let accounts = db.get_table().unwrap();
 
@@ -50,15 +50,14 @@ Add this to your `Cargo.toml`:
 moodb = { git = "https://github.com/ThatGuyJamal/MooDB" }
 ```
 
-## Todo
+## API
 
-- `delete_many` method
-- `delete_all` method
-- `update_many` method
-- `get_many` method
-- `get_all` method
-- `insert_many` method
+todo...
+
+## Todo
 
 - Add memory old mode (for faster reads/write) but no file persistance.
 - Improve thread safety
 - improve error messages and error handling
+- Research database [normalization](https://en.wikipedia.org/wiki/Database_normalization)
+- Table hashing for faster reads/writes
