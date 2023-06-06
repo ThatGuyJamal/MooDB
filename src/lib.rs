@@ -1,3 +1,6 @@
+mod debug;
+
+use debug::{DebugClient, DebugLevel};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::fs::{File, OpenOptions};
@@ -5,11 +8,25 @@ use std::io::{Read, Seek, SeekFrom, Write};
 use std::sync::{Arc, Mutex};
 use std::{fs, path::PathBuf};
 
+const FILE_EXTENSION: &str = "json";
+const DEFAULT_DIR: Option<&str> = Some("db/moo");
+
 #[derive(Debug, Clone)]
 /// Configuration for the database.
 pub struct Configuration {
-    /// If true, the database will print debug messages on actions.
-    pub debug: bool,
+    pub db_dir: Option<&'static str>,
+    pub debug_mode: bool,
+    pub debug_level: DebugLevel,
+}
+
+impl Default for Configuration {
+    fn default() -> Self {
+        Self {
+            db_dir: DEFAULT_DIR,
+            debug_mode: false,
+            debug_level: DebugLevel::Info,
+        }
+    }
 }
 
 /// Return Type for common db actions
@@ -20,8 +37,10 @@ pub type MooRecords<T> = Vec<MooRecord<T>>;
 ///
 /// This is a simple struct that contains an ID and a value.
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-pub struct MooRecord<T> where
-    T: Serialize, {
+pub struct MooRecord<T>
+where
+    T: Serialize,
+{
     /// The Key of the record and how data will be accessed.
     pub key: String,
     /// The value of the record.
@@ -45,9 +64,6 @@ pub struct MooError {
     pub message: String,
 }
 
-const FILE_EXTENSION: &str = "json";
-const DEFAULT_DIR: &str = "db/moo";
-
 /// The main database client.
 ///
 /// This struct is used to create a new database instance
@@ -63,6 +79,8 @@ where
     pub table: MooTable<T>,
 
     pub config: Configuration,
+
+    pub debugger: DebugClient,
 }
 
 impl<T> MooClient<T>
@@ -77,17 +95,23 @@ where
     /// If non is passed, the database will be stored in a default directory called `moodb` in the current working directory.
     ///
     /// Returns a `MooResult` with the result of the action.
-    pub fn new(name: &str, dir: Option<&str>, config: Option<Configuration>) -> MooResult<MooClient<T>> {
+    pub fn new(
+        name: &str,
+        dir: Option<&str>,
+        config: Option<Configuration>,
+    ) -> MooResult<MooClient<T>> {
+        println!("MooDB Initializing...");
+
         let config = match config {
             Some(config) => config,
-            None => Configuration {
-                debug: false,
-            }
+            None => Configuration::default(),
         };
+
+        let config_clone = config.clone();
 
         let path = match dir {
             Some(dir) => PathBuf::from(dir),
-            None => PathBuf::from(format!("./{}", DEFAULT_DIR)),
+            None => PathBuf::from(format!("./{}", DEFAULT_DIR.unwrap())),
         };
 
         if !path.exists() {
@@ -102,18 +126,29 @@ where
             }
         }
 
-        let table = match MooTable::new(name, &path, config.clone()) {
+        let _debugger = DebugClient::new(false, DebugLevel::Info, config_clone);
+
+        let table = match MooTable::new(name, &path, config.clone(), _debugger.clone()) {
             Ok(table) => table,
             Err(err) => {
                 return Err(err);
             }
         };
 
-        Ok(Self { path, table, config })
+        println!("MooDB Initialized.");
+
+        Ok(Self {
+            path,
+            table,
+            config,
+            debugger: _debugger,
+        })
     }
 
     /// Reset the table file and clear all records.
     pub fn reset_table(&mut self) -> MooResult<()> {
+        self.debugger
+            .log(format!("Resetting table: {}", self.table.name));
 
         self.table.records.clear();
 
@@ -145,9 +180,9 @@ where
                     message: "Failed to write to table file.".to_string(),
                 })
             }
-         }
+        }
 
-        match  file.set_len(0) {
+        match file.set_len(0) {
             Ok(_) => {}
             Err(_) => {
                 return Err(MooError {
@@ -157,15 +192,15 @@ where
             }
         }
 
-            match file.flush() {
-                Ok(_) => {}
-                Err(_) => {
-                    return Err(MooError {
-                        code: MooErrorCodes::Fatal,
-                        message: "Failed to flush table file.".to_string(),
-                    })
-                }
+        match file.flush() {
+            Ok(_) => {}
+            Err(_) => {
+                return Err(MooError {
+                    code: MooErrorCodes::Fatal,
+                    message: "Failed to flush table file.".to_string(),
+                })
             }
+        }
 
         Ok(())
     }
@@ -176,6 +211,9 @@ where
     ///
     /// Returns a `MooResult` with the result of the action.
     pub fn get_table(&mut self) -> MooResult<MooTable<T>> {
+        self.debugger
+            .log(format!("Getting table: {}", self.table.name));
+
         Ok(self.table.clone())
     }
 
@@ -183,10 +221,11 @@ where
     ///
     /// Returns a `MooResult` with the result true if the table was deleted, false if it was not or an error if something went wrong.
     pub fn delete_table(&mut self) -> MooResult<()> {
+        self.debugger
+            .log(format!("Deleting table: {}", self.table.name));
+
         match self.table.delete_self(&self.path) {
-            Ok(_) => {
-                Ok(())
-            },
+            Ok(_) => Ok(()),
             Err(err) => Err(err),
         }
     }
@@ -201,6 +240,7 @@ where
     pub file: Arc<Mutex<File>>,
     pub records: MooRecords<T>,
     pub config: Configuration,
+    pub debugger: DebugClient,
 }
 
 impl<T> MooTable<T>
@@ -214,8 +254,12 @@ where
     /// The `path` to the directory where the table will be stored.
     ///
     /// This is an internal function and can't be used directly by the user.
-    fn new(name: &str, path: &PathBuf, config: Configuration) -> MooResult<MooTable<T>> {
-
+    fn new(
+        name: &str,
+        path: &PathBuf,
+        config: Configuration,
+        debugger: DebugClient,
+    ) -> MooResult<MooTable<T>> {
         let file_path = path.join(format!("{}.{}", name, FILE_EXTENSION));
 
         let mut file = match OpenOptions::new()
@@ -233,7 +277,7 @@ where
                             message: "Failed to create table file. Might be missing permissions to write the directory?".to_string()
                         })
                     }
-                }   
+                }
             }
         };
 
@@ -249,7 +293,7 @@ where
             }
         }
 
-         let records: Vec<MooRecord<T>> = if contents.is_empty() {
+        let records: Vec<MooRecord<T>> = if contents.is_empty() {
             Vec::new()
         } else {
             let cloned_contents = contents.clone(); // Create a clone for deserialization
@@ -269,10 +313,13 @@ where
             file: Arc::new(Mutex::new(file)),
             records,
             config,
+            debugger,
         })
     }
 
     /// Deletes this table from the database instance.
+    ///
+    /// This is an internal function and can't be used directly by the user.
     fn delete_self(&mut self, path: &PathBuf) -> MooResult<()> {
         self.records.clear();
 
@@ -288,7 +335,7 @@ where
     }
 
     /// Saves the table to disk after an action.
-    /// 
+    ///
     /// This is an internal function and can't be used directly by the user.
     fn save(&self) -> MooResult<()> {
         let serialized_records = match serde_json::to_vec(&self.records) {
@@ -321,7 +368,7 @@ where
             }
         }
 
-         match file.write_all(&serialized_records) {
+        match file.write_all(&serialized_records) {
             Ok(_) => {}
             Err(_) => {
                 return Err(MooError {
@@ -329,9 +376,9 @@ where
                     message: "Failed to write to table file.".to_string(),
                 })
             }
-         }
+        }
 
-        match  file.set_len(serialized_records.len() as u64) {
+        match file.set_len(serialized_records.len() as u64) {
             Ok(_) => {}
             Err(_) => {
                 return Err(MooError {
@@ -341,7 +388,7 @@ where
             }
         }
 
-         match file.flush() {
+        match file.flush() {
             Ok(_) => {}
             Err(_) => {
                 return Err(MooError {
@@ -349,7 +396,7 @@ where
                     message: "Failed to flush table file.".to_string(),
                 })
             }
-         }
+        }
 
         Ok(())
     }
@@ -360,7 +407,6 @@ where
     ///
     /// The `value` of the record to insert.
     pub fn insert(&mut self, key: &str, value: T) -> MooResult<()> {
-        
         let exist = match self.get(key) {
             Ok(_) => true,
             Err(_) => false,
@@ -368,7 +414,7 @@ where
 
         if exist {
             return Err(MooError {
-                code: MooErrorCodes::Error,
+                code: MooErrorCodes::Warn,
                 message: format!("Record with key: {} already exists. Use the update method to change its value.", key),
             });
         }
@@ -387,6 +433,9 @@ where
             }
         }
 
+        self.debugger
+            .log(format!("Inserted new record with key: {}", key));
+
         Ok(())
     }
 
@@ -395,9 +444,11 @@ where
     /// The `key` of the record to get.
     ///
     /// Returns a `MooResult` with the result of the action.
-    pub fn get(&self, key: &str) -> MooResult<T> {
+    pub fn get(&mut self, key: &str) -> MooResult<T> {
         for record in &self.records {
             if record.key == key {
+                self.debugger.log(format!("Found record with key: {}", key));
+
                 return Ok(record.value.clone());
             }
         }
@@ -409,9 +460,9 @@ where
     }
 
     /// Delete a record from the table.
-    /// 
+    ///
     /// The `key` of the record to delete.
-    /// 
+    ///
     /// Returns a `MooResult` with the result of the action.
     pub fn delete(&mut self, key: &str) -> MooResult<()> {
         let mut index = 0;
@@ -420,6 +471,10 @@ where
             if record.key == key {
                 self.records.remove(index);
                 self.save()?;
+
+                self.debugger
+                    .log(format!("Deleted record with key: {}", key));
+
                 return Ok(());
             }
 
@@ -433,11 +488,11 @@ where
     }
 
     /// Update a record in the table.
-    /// 
+    ///
     /// The `key` of the record to update.
-    /// 
+    ///
     /// The `value` of the record to update.
-    /// 
+    ///
     /// Returns a `MooResult` with the result of the action.
     pub fn update(&mut self, key: &str, value: T) -> MooResult<()> {
         let mut index = 0;
@@ -446,6 +501,10 @@ where
             if record.key == key {
                 self.records[index].value = value;
                 self.save()?;
+
+                self.debugger
+                    .log(format!("Updated record with key: {}", key));
+
                 return Ok(());
             }
 
@@ -466,7 +525,16 @@ mod tests {
 
     #[test]
     fn insert() {
-        let mut db = MooClient::<String>::new("test", None, None).unwrap();
+        let mut db = MooClient::<String>::new(
+            "test",
+            None,
+            Some(Configuration {
+                db_dir: None,
+                debug_mode: true,
+                debug_level: DebugLevel::Info,
+            }),
+        )
+        .unwrap();
 
         db.reset_table().unwrap();
 
