@@ -55,7 +55,7 @@ impl DebugClient {
             Ok(file) => file,
             Err(e) => {
                 println!(
-                    "Error opening debug file: {} ... attempting to create one",
+                    "Error opening debug file: {} ... attempting to create one.",
                     e
                 );
 

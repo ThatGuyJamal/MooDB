@@ -5,9 +5,9 @@ A simple file based database using key-value pairs.
 ## Example
 
 ```rs
-use moodb::MooClient;
+use moodb::core::MooClient;
 
-struct Bank {
+struct Bank { 
     balance: f64,
     age: u8,
 }
