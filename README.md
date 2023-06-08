@@ -39,7 +39,7 @@ fn main() {
 
 For more complex examples, see the [examples](./examples) directory.
 
-## Installation
+# Installation
 
 Add this to your `Cargo.toml`:
 
@@ -49,9 +49,9 @@ Add this to your `Cargo.toml`:
 moodb = { git = "https://github.com/ThatGuyJamal/MooDB" }
 ```
 
-## API
+## Documentation
 
-todo...
+API Usage cant be found at https://docs.rs/moodb
 
 ## Todo
 
