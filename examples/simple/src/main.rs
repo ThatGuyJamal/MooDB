@@ -1,4 +1,4 @@
-use moodb::MooClient;
+use moodb::{core::MooClient, Configuration};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -11,8 +11,15 @@ struct CryptoAccount {
 const TABLE_NAME: &str = "crypto_accounts";
 
 fn main() {
+
+    let config = Configuration {
+        db_dir: "./db/moo",
+        debug_mode: true,
+        debug_level: None,
+    };
+
     // Create our database client
-    let mut client: MooClient<CryptoAccount> = match MooClient::new(TABLE_NAME, None, None) {
+    let mut client = match MooClient::<CryptoAccount>::new(TABLE_NAME, None, Some(config)) {
         Ok(client) => client,
         Err(e) => panic!("Error creating client: {}", e.message),
     };
