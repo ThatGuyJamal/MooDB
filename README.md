@@ -6,7 +6,9 @@ A simple file based database using key-value pairs.
 
 ```rust
 use moodb::core::MooClient;
+use serde::{Deserialize, Serialize};
 
+#[derive(Clone, Serialize, Deserialize, Debug)]
 struct Bank { 
     balance: f64,
     age: u8,

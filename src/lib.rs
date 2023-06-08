@@ -19,7 +19,9 @@
 //! ## Usage
 //! ```
 //! use moodb::core::MooClient;
-//!
+//! use serde::{Deserialize, Serialize};
+//! 
+//! #[derive(Clone, Serialize, Deserialize, Debug)]
 //! struct Bank {
 //!     balance: f32,
 //!     ssn: String,

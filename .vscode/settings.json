@@ -3,6 +3,7 @@
         "chrono",
         "moodb",
         "println",
+        "serde",
         "struct"
     ]
 }

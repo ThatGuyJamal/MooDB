@@ -1,6 +1,6 @@
 [package]
 name = "moodb"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["thatguyjamal"]
 description = "A simple key-value file based persistent database for Rust"
@@ -8,7 +8,8 @@ readme = "./README.md"
 repository = "https://github.com/ThatGuyJamal/MooDB"
 license-file = "./LICENSE"
 keywords = ["database", "key-value", "persistent", "file", "json"]
-# documentation = "https://docs.rs/moodb"
+documentation = "https://docs.rs/moodb"
+publish = false
 
 exclude = [
     "examples/**/*",
