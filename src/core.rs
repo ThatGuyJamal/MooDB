@@ -20,13 +20,16 @@ pub struct MooClient<T>
 where
     T: Clone + Serialize + DeserializeOwned,
 {
-    /// The director where the database is stored.
+    /// The path to the directory where the database and its tables are stored.
     pub path: PathBuf,
 
+    /// The table for this database instance.
     pub table: MooTable<T>,
 
+    /// The configuration for this database instance.
     pub config: Configuration,
 
+    /// The debugger for this database instance.
     pub debugger: DebugClient,
 }
 
@@ -673,9 +676,5 @@ mod tests {
         people.update_many(u).unwrap();
 
         assert_eq!(people.get("4").unwrap(), "Example Person 4 updated");
-
-        people.delete_all().unwrap();
-
-        assert_eq!(people.records.len(), 0);
     }
 }

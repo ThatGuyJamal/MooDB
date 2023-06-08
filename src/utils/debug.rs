@@ -11,14 +11,22 @@ use serde::Deserialize;
 
 use crate::Configuration;
 
+/// The debug client for the database.
+///
+/// This is used to log debug information to a file.
 #[derive(Debug, Clone)]
 pub struct DebugClient {
+    /// The path to the debug file.
     pub path: Option<PathBuf>,
+    /// The file to write debug logs to.
     pub file: Option<Arc<Mutex<File>>>,
+    /// The debug level for the database.
     pub level: DebugLevel,
+    /// Whether or not to enable debug mode for the database.
     pub enabled: bool,
 }
 
+/// The debug level for the database.
 #[derive(Debug, Clone, Deserialize)]
 pub enum DebugLevel {
     Info,
@@ -27,11 +35,19 @@ pub enum DebugLevel {
 }
 
 impl DebugClient {
+    /// Create a new debug client.
+    ///
+    /// `enabled` - Whether or not to enable debug mode for the database.
+    ///
+    /// `level` - The debug level for the database.
+    ///
+    /// `config` - The configuration for the database. (Passed from the MooClient)
     pub fn new(enabled: bool, level: Option<DebugLevel>, config: Configuration) -> Self {
         let d_level = match level {
             Some(level) => level,
             None => DebugLevel::Info,
         };
+
         if !enabled {
             return Self {
                 enabled: false,
@@ -83,6 +99,11 @@ impl DebugClient {
     }
 
     // todo - fix log function where logs don't overwrite old logs.
+    /// Log a debug message to the debug file.
+    /// 
+    /// `debug` - The debug message or struct to log. This can be any data type that implements the Debug trait.
+    /// 
+    /// This function is internal and can't be used outside of the library.
     pub fn log<T>(&mut self, debug: T)
     where
         T: Debug,

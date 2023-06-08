@@ -13,9 +13,9 @@ struct Bank { 
 }
 
 fn main() {
-    let mut db = MooClient::<Bank>::new("bank_accounts", None, None).unwrap();
+    let mut db = MooClient::<Bank>::new("bank_accounts", None, None).unwrap(); // creates a new db client
 
-    let accounts = db.get_table().unwrap();
+    let accounts = db.get_table().unwrap(); // gets the table for this db client
 
     let bank_data = Bank {
         balance: 100.0,
@@ -35,7 +35,6 @@ fn main() {
 
     accounts.delete("John Doe").unwrap(); // deletes the data saved
 }
-
 ```
 
 For more complex examples, see the [examples](./examples) directory.

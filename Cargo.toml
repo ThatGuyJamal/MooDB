@@ -6,17 +6,16 @@ authors = ["thatguyjamal"]
 description = "A simple key-value file based persistent database for Rust"
 readme = "./README.md"
 repository = "https://github.com/ThatGuyJamal/MooDB"
-license = "Mozilla Public License 2.0"
 license-file = "./LICENSE"
 keywords = ["database", "key-value", "persistent", "file", "json"]
 # documentation = "https://docs.rs/moodb"
 
 exclude = [
-    "./examples/*",
-    "./tests/*",
-    "./.github/*",
-    "./.vscode/*",
-    "./db/*",
+    "examples/**/*",
+    "tests/**/*",
+    ".github/*",
+    ".vscode/**/*",
+    "db/**/*",
 ]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
