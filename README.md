@@ -4,7 +4,7 @@ A simple file based database using key-value pairs.
 
 ## Example
 
-```rs
+```rust
 use moodb::core::MooClient;
 
 struct Bank { 
@@ -40,6 +40,10 @@ fn main() {
 For more complex examples, see the [examples](./examples) directory.
 
 # Installation
+
+You can install Moodb using crates.io by running `cargo add moodb`. This will install the latest stable version of Moodb.
+
+If you want to use the latest unstable version of Moodb, you can install it from github.
 
 Add this to your `Cargo.toml`:
 
